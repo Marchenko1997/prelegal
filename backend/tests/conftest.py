@@ -1,3 +1,4 @@
+import copy
 import pytest
 from httpx import AsyncClient, ASGITransport
 from main import app
@@ -36,5 +37,4 @@ async def client():
 
 @pytest.fixture
 def valid_payload():
-    import copy
     return copy.deepcopy(VALID_PAYLOAD)
