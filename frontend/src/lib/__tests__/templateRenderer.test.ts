@@ -21,6 +21,23 @@ function makeData(overrides: Partial<NdaFormData> = {}): NdaFormData {
   };
 }
 
+// Cover template with signature table marker for table-rendering tests
+const COVER_WITH_TABLE = `\
+Purpose: [Evaluating whether to enter into a business relationship with the other party.]
+Date: [Today's date]
+- [x]     Expires [1 year(s)] from Effective Date.
+- [ ]     Continues until terminated in accordance with the terms of the MNDA.
+- [x]     [1 year(s)] from Effective Date, but in the case of trade secrets until Confidential Information is no longer considered a trade secret under applicable laws.
+- [ ]     In perpetuity.
+Law: [Fill in state]
+Court: [Fill in city or county and state, i.e. "courts located in New Castle, DE"]
+Mods: List any modifications to the MNDA
+
+|| PARTY 1 | PARTY 2 |
+|---|---|
+| cell | cell |
+`;
+
 // Minimal cover template — uses exact placeholder strings from renderer.ts
 const COVER = `\
 Purpose: [Evaluating whether to enter into a business relationship with the other party.]
@@ -74,6 +91,11 @@ describe("renderCoverPage", () => {
     expect(html).toContain("5 year(s) from Effective Date");
   });
 
+  it("shows perpetual text when confidentialityTermType is perpetual", () => {
+    const html = renderCoverPage(makeData({ confidentialityTermType: "perpetual", confidentialityTermYears: null }), COVER);
+    expect(html).toContain("In perpetuity");
+  });
+
   it("replaces governing law state", () => {
     const html = renderCoverPage(makeData({ governingLawState: "California" }), COVER);
     expect(html).toContain("California");
@@ -117,6 +139,14 @@ describe("renderCoverPage", () => {
     const html = renderCoverPage(makeData({ modifications: "<script>hack()</script>" }), COVER);
     expect(html).not.toContain("<script>");
     expect(html).toContain("&lt;script&gt;");
+  });
+
+  it("renders signature table with party names", () => {
+    const html = renderCoverPage(makeData(), COVER_WITH_TABLE);
+    expect(html).toContain("<table");
+    expect(html).toContain("PARTY 1");
+    expect(html).toContain("Alice Smith");
+    expect(html).toContain("Acme Corp");
   });
 });
 
