@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #f9fafb;
+  --foreground: #111827;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: Inter, system-ui, -apple-system, sans-serif;
+}
+
+/* NDA document content styles */
+.nda-content h1 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+.nda-content h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+.nda-content h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 1rem;
+  margin-bottom: 0.25rem;
+}
+.nda-content p {
+  margin-bottom: 0.75rem;
+}
+.nda-content ul,
+.nda-content ol {
+  margin-left: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+.nda-content li {
+  margin-bottom: 0.25rem;
+}
+.nda-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+}
+.nda-content td,
+.nda-content th {
+  border: 1px solid #d1d5db;
+  padding: 0.5rem;
+  vertical-align: top;
+}
+.nda-content th {
+  background-color: #f3f4f6;
+}
+.nda-content label {
+  display: none;
+}
