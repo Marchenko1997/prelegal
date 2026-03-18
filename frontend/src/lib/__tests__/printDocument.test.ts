@@ -30,7 +30,7 @@ describe("printDocument", () => {
     // Manually invoke the onload handler (simulating the window load event)
     mockWindow.onload!();
 
-    expect(mockPrint).toHaveBeenCalled();
+    expect(mockPrint).toHaveBeenCalledTimes(1);
   });
 
   it("fallback path: calls print via setTimeout when onload does not fire", () => {
@@ -52,7 +52,7 @@ describe("printDocument", () => {
     // Do NOT call onload — advance fake timers to trigger the setTimeout fallback
     vi.advanceTimersByTime(500);
 
-    expect(mockPrint).toHaveBeenCalled();
+    expect(mockPrint).toHaveBeenCalledTimes(1);
   });
 
   it("blocked popup: shows alert with 'pop-up' message", () => {
