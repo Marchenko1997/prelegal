@@ -67,7 +67,7 @@ jobs:
             backend/requirements-dev.txt
 
       - name: Install backend dependencies
-        run: pip install -r backend/requirements.txt
+        run: pip install -r backend/requirements.txt -r backend/requirements-dev.txt
 
       - name: Install frontend dependencies
         run: cd frontend && npm ci
