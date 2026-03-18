@@ -3,19 +3,17 @@ import { test, expect } from "@playwright/test";
 test.describe("Validation", () => {
   test("empty purpose on step 1 shows error", async ({ page }) => {
     await page.goto("/nda");
-    // Clear the pre-filled purpose
     await page.getByLabel("Purpose").fill("");
     await page.getByRole("button", { name: "Next →" }).click();
-    // Error should appear
     await expect(page.getByText(/required/i)).toBeVisible();
-    // Should still be on step 1
     await expect(page.getByRole("heading", { name: /Step 1/ })).toBeVisible();
   });
 
   test("mndaTermType expires with no years shows error on step 2", async ({ page }) => {
     await page.goto("/nda");
     await page.getByRole("button", { name: "Next →" }).click(); // advance to step 2
-    // "expires" is already selected — clear the years input
+    // Explicitly select "expires" to ensure the years input is visible
+    await page.getByLabel("Expires after a fixed number of years").check();
     await page.getByLabel("Number of years:").first().fill("");
     await page.getByRole("button", { name: "Next →" }).click();
     await expect(page.getByText(/required|Please enter/i)).toBeVisible();
@@ -24,7 +22,6 @@ test.describe("Validation", () => {
 
   test("no signature on step 4 shows error", async ({ page }) => {
     await page.goto("/nda");
-    // Navigate through steps 1-3 using completeWizard helper minus the last step
     await page.getByRole("button", { name: "Next →" }).click(); // step 1 → 2
     await page.getByRole("button", { name: "Next →" }).click(); // step 2 → 3
     // Fill step 3 minimally
@@ -41,9 +38,8 @@ test.describe("Validation", () => {
     await page.getByLabel("Governing Law (State)").fill("Delaware");
     await page.getByLabel("Jurisdiction").fill("Wilmington, DE");
     await page.getByRole("button", { name: "Next →" }).click(); // step 3 → 4
-    // Try to advance without drawing
+    // Try to advance without drawing signatures
     await page.getByRole("button", { name: "Next →" }).click();
-    // Should show signature required error
     await expect(page.getByText(/signature is required/i)).toBeVisible();
     await expect(page.getByRole("heading", { name: /Step 4/ })).toBeVisible();
   });

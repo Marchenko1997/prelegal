@@ -22,11 +22,12 @@ export function TextareaInput({
 }: TextareaInputProps) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-sm font-medium text-gray-700">
+      <label htmlFor={name} className="text-sm font-medium text-gray-700">
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>
       <textarea
+        id={name}
         rows={rows}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         {...register(name as any, { required: required ? `${label} is required` : false })}
