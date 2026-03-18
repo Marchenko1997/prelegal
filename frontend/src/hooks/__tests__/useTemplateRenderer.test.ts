@@ -73,13 +73,21 @@ describe("useTemplateRenderer", () => {
     });
     vi.mocked(fetchTemplate).mockReturnValue(pending);
 
-    const { unmount } = renderHook(() => useTemplateRenderer(makeFormData()));
+    const { result, unmount } = renderHook(() => useTemplateRenderer(makeFormData()));
+    // Capture initial state — isLoading is true, no HTML yet
+    expect(result.current.isLoading).toBe(true);
+    expect(result.current.coverpageHtml).toBe("");
+
     unmount(); // triggers cancelled = true
 
-    // Resolve AFTER unmount — should NOT cause state update or React warning
+    // Resolve AFTER unmount — the cancelled flag must prevent state updates
     await act(async () => {
       resolve!("# Template");
     });
-    // If no error is thrown, the test passes
+
+    // State must remain at initial values, proving the cancelled guard worked
+    expect(result.current.isLoading).toBe(true);
+    expect(result.current.coverpageHtml).toBe("");
+    expect(result.current.error).toBeNull();
   });
 });
