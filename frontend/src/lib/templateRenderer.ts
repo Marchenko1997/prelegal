@@ -164,7 +164,7 @@ export function renderCoverPage(
   // MNDA Modifications
   const modsPlaceholder = "List any modifications to the MNDA";
   if (data.modifications?.trim()) {
-    text = safeReplace(text, modsPlaceholder, data.modifications.trim());
+    text = safeReplace(text, modsPlaceholder, escapeHtml(data.modifications.trim()));
   } else {
     text = safeReplace(text, modsPlaceholder, "_No modifications._");
   }
