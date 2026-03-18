@@ -131,7 +131,7 @@ describe("renderCoverPage", () => {
   it("escapes XSS in party name", () => {
     const data = makeData();
     data.party1.printName = "<img onerror=alert(1)>";
-    const html = renderCoverPage(data, COVER);
+    const html = renderCoverPage(data, COVER_WITH_TABLE);
     expect(html).not.toContain("<img onerror");
   });
 
