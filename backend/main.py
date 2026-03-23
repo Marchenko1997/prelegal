@@ -10,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from database import init_db
 from routers.auth import router as auth_router
 from routers.catalog import router as catalog_router
+from routers.chat import router as chat_router
 from routers.generate import router as generate_router
 
 load_dotenv()
@@ -35,6 +36,7 @@ app.add_middleware(
 
 app.include_router(auth_router)
 app.include_router(catalog_router)
+app.include_router(chat_router)
 app.include_router(generate_router)
 
 # Serve the static Next.js export when available (Docker production)

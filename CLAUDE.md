@@ -60,11 +60,17 @@ Backend available at http://localhost:8000
 - Docker multi-stage build (Node frontend + Python backend)
 - FastAPI backend with SQLite (fresh DB each container start)
 - Next.js static export served by FastAPI at localhost:8000
-- Placeholder auth routes: POST /api/auth/signup, POST /api/auth/signin, GET /api/auth/me
+- Placeholder auth routes: POST /api/auth/signup, POST /api/auth/signin, GET /api/auth/me (all return 501/401)
 - Start/stop scripts for Mac, Linux, Windows
-- Mutual NDA form with live preview and PDF download
+- Mutual NDA: 5-step wizard (agreement details → terms → party info → canvas signatures → review), PDF download via browser print
+
+### Also Completed (PL-4)
+- Home page: catalog grid fetched from GET /api/catalog; Mutual NDA is clickable, all others show "Coming soon"
+- Login page: frontend UI only — always proceeds to home regardless of credentials (no real auth)
+- Backend routes: GET /api/health, GET /api/catalog, GET /api/templates/{name} (serves raw Markdown), POST /api/generate (renders Mutual NDA Markdown → HTML)
+- Template rendering: backend renders Markdown template with form fields substituted; frontend prints via browser print dialog
 
 ### Not Yet Implemented
-- Functional authentication (currently returns 501/401 placeholders)
+- Functional authentication (signup/signin/session management)
 - AI chat for document generation
 - Support for other document templates beyond Mutual NDA
