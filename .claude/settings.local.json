@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__github__get_file_contents",
+      "Bash(PYTHONPATH=backend pytest backend/tests/test_models.py -v)",
+      "Bash(PYTHONPATH=backend pytest backend/tests/test_renderer.py -v)",
+      "Bash(PYTHONPATH=backend pytest backend/tests/ -v)",
+      "Bash(npm install:*)",
+      "Bash(npm test:*)",
+      "Bash(npx playwright:*)",
+      "Bash(git:*)",
+      "Bash(npx tsc:*)",
+      "Bash(ls:*)",
+      "mcp__atlassian__getAccessibleAtlassianResources",
+      "mcp__atlassian__addCommentToJiraIssue",
+      "Bash(PYTHONPATH=backend pytest backend/tests/ -v --tb=short)",
+      "mcp__atlassian__getTransitionsForJiraIssue",
+      "mcp__atlassian__transitionJiraIssue",
+      "mcp__atlassian__getJiraIssue",
+      "Bash(uv --version)",
+      "Bash(uv sync:*)",
+      "Bash(uv run:*)",
+      "Bash(npm run:*)",
+      "mcp__github__create_pull_request"
+    ]
+  }
+}
