@@ -12,12 +12,11 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
     },
     {
-      // FastAPI backend — must be started from repo root
-      command: "uvicorn main:app --port 8001",
+      // FastAPI backend — run from backend/ where pyproject.toml lives
+      command: "uv run uvicorn main:app --port 8001",
       url: "http://localhost:8001/api/health",
       reuseExistingServer: !process.env.CI,
-      env: { PYTHONPATH: path.resolve(__dirname, "../backend") },
-      cwd: path.resolve(__dirname, ".."),
+      cwd: path.resolve(__dirname, "../backend"),
     },
   ],
   projects: [{ name: "chromium", use: { browserName: "chromium" } }],

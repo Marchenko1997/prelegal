@@ -1,14 +1,27 @@
 import os
+from contextlib import asynccontextmanager
+from pathlib import Path
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
-from routers.generate import router
+from database import init_db
+from routers.auth import router as auth_router
+from routers.catalog import router as catalog_router
+from routers.generate import router as generate_router
 
 load_dotenv()
 
-app = FastAPI(title="Prelegal NDA API", version="1.0.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    yield
+
+
+app = FastAPI(title="Prelegal API", version="1.0.0", lifespan=lifespan)
 
 origins = os.getenv("FRONTEND_ORIGIN", "http://localhost:3000").split(",")
 
@@ -20,4 +33,11 @@ app.add_middleware(
     allow_headers=["Content-Type", "Accept"],
 )
 
-app.include_router(router)
+app.include_router(auth_router)
+app.include_router(catalog_router)
+app.include_router(generate_router)
+
+# Serve the static Next.js export when available (Docker production)
+_static_dir = Path(__file__).parent / "static"
+if _static_dir.exists():
+    app.mount("/", StaticFiles(directory=_static_dir, html=True), name="frontend")
