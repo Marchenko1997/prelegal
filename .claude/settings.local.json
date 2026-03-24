@@ -21,7 +21,9 @@
       "Bash(uv sync:*)",
       "Bash(uv run:*)",
       "Bash(npm run:*)",
-      "mcp__github__create_pull_request"
+      "mcp__github__create_pull_request",
+      "Bash(uv add:*)",
+      "Bash(cd:*)"
     ]
   }
 }
