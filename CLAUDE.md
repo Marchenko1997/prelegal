@@ -8,7 +8,7 @@ The available documents are covered in the catalog.json file in the project root
 
 @catalog.json
 
-The current implementation supports the Mutual NDA document with no AI chat yet.
+The current implementation supports the Mutual NDA document with AI chat for field collection.
 
 ## Development process
 
@@ -45,7 +45,7 @@ scripts/stop-linux.sh
 scripts/start-windows.ps1
 scripts/stop-windows.ps1
 ```
-Backend available at http://localhost:8000
+Backend available at http://localhost:8001 (docker-compose maps 8001→8000 inside the container; port 8000 is reserved for other local projects)
 
 ## Color Scheme
 - Accent Yellow: `#ecad0a`
@@ -59,18 +59,20 @@ Backend available at http://localhost:8000
 ### Completed (PL-4)
 - Docker multi-stage build (Node frontend + Python backend)
 - FastAPI backend with SQLite (fresh DB each container start)
-- Next.js static export served by FastAPI at localhost:8000
+- Next.js static export served by FastAPI at localhost:8001
 - Placeholder auth routes: POST /api/auth/signup, POST /api/auth/signin, GET /api/auth/me (all return 501/401)
 - Start/stop scripts for Mac, Linux, Windows
-- Mutual NDA: 5-step wizard (agreement details → terms → party info → canvas signatures → review), PDF download via browser print
+- Home page: catalog grid fetched from GET /api/catalog; Mutual NDA clickable, others show "Coming soon"
+- Login page: frontend UI only — always proceeds to home (no real auth)
+- Backend routes: GET /api/health, GET /api/catalog, GET /api/templates/{name}, POST /api/generate
 
-### Also Completed (PL-4)
-- Home page: catalog grid fetched from GET /api/catalog; Mutual NDA is clickable, all others show "Coming soon"
-- Login page: frontend UI only — always proceeds to home regardless of credentials (no real auth)
-- Backend routes: GET /api/health, GET /api/catalog, GET /api/templates/{name} (serves raw Markdown), POST /api/generate (renders Mutual NDA Markdown → HTML)
-- Template rendering: backend renders Markdown template with form fields substituted; frontend prints via browser print dialog
+### Completed (PL-5)
+- Replaced 5-step wizard with free-form AI chat (split-pane: chat left, live document preview right)
+- POST /api/chat: LiteLLM + OpenRouter (Cerebras, `arcee-ai/trinity-large-preview:free`), Structured Outputs
+- AI greets user on load, collects all NDA text fields for both parties progressively
+- "Download PDF" button available at any time — opens signature modal (canvas pads for both parties) then generates PDF
+- docker-compose.yml passes OPENROUTER_API_KEY via env_file; .dockerignore excludes **/.next and **/out
 
 ### Not Yet Implemented
 - Functional authentication (signup/signin/session management)
-- AI chat for document generation
 - Support for other document templates beyond Mutual NDA
