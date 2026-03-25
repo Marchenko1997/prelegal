@@ -23,6 +23,7 @@ const DOC_NAMES: Record<string, string> = {
   "pilot-agreement": "Pilot Agreement",
   baa: "Business Associate Agreement",
   "ai-addendum": "AI Addendum",
+  "mutual-nda-coverpage": "Mutual NDA Cover Page",
 };
 
 interface Props {
@@ -149,7 +150,7 @@ export function DocChatClient({ slug }: Props) {
           <div className="flex-1 overflow-auto p-6">
             {previewHtml ? (
               <div
-                className="bg-white rounded-lg shadow-sm p-8 prose prose-sm max-w-none"
+                className="bg-white rounded-lg shadow-sm p-8 doc-content"
                 dangerouslySetInnerHTML={{ __html: previewHtml }}
               />
             ) : (

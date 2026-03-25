@@ -33,6 +33,7 @@ SLUG_TO_FILENAME: dict[str, str] = {
     "pilot-agreement": "Pilot-Agreement.md",
     "baa": "BAA.md",
     "ai-addendum": "AI-Addendum.md",
+    "mutual-nda-coverpage": "Mutual-NDA-coverpage.md",
 }
 
 DOC_NAMES: dict[str, str] = {
@@ -46,7 +47,17 @@ DOC_NAMES: dict[str, str] = {
     "pilot-agreement": "Pilot Agreement",
     "baa": "Business Associate Agreement",
     "ai-addendum": "AI Addendum",
+    "mutual-nda-coverpage": "Mutual NDA Cover Page",
 }
+
+# Cover page uses bracket placeholders, not span markers — hardcode its fields
+COVERPAGE_FIELDS = [
+    "Purpose",
+    "Effective Date",
+    "Governing Law State",
+    "Jurisdiction",
+    "Modifications",
+]
 
 SUPPORTED_DOCS = [
     "Mutual Non-Disclosure Agreement",
@@ -159,7 +170,11 @@ def call_doc_chat(
 ) -> DocChatResponse:
     """Send conversation to LLM for a generic document type and return parsed response."""
     template_text = get_template(doc_type)
-    fields_list = extract_fields(template_text)
+    fields_list = (
+        COVERPAGE_FIELDS
+        if doc_type == "mutual-nda-coverpage"
+        else extract_fields(template_text)
+    )
     doc_name = DOC_NAMES.get(doc_type, doc_type)
 
     messages = _build_messages(doc_name, fields_list, conversation, current_fields)

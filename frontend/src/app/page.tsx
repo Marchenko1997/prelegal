@@ -14,7 +14,6 @@ interface CatalogItem {
 // Documents that use a special dedicated route
 const SPECIAL_ROUTES: Record<string, string> = {
   "Mutual Non-Disclosure Agreement": "/nda",
-  "Mutual NDA Cover Page": "/nda",
 };
 
 function getRoute(item: CatalogItem): string {

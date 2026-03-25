@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from services.doc_chat import DOC_NAMES, SLUG_TO_FILENAME, extract_fields, get_template
+from services.doc_chat import COVERPAGE_FIELDS, DOC_NAMES, SLUG_TO_FILENAME, extract_fields, get_template
 
 
 # --- Unit tests for doc_chat service ---
@@ -12,8 +12,7 @@ def test_slug_to_filename_covers_all_slugs():
     assert "csa" in SLUG_TO_FILENAME
     assert "sla" in SLUG_TO_FILENAME
     assert "psa" in SLUG_TO_FILENAME
-    # mutual-nda-coverpage uses literal placeholders, not spans — served via /nda instead
-    assert "mutual-nda-coverpage" not in SLUG_TO_FILENAME
+    assert "mutual-nda-coverpage" in SLUG_TO_FILENAME
 
 
 def test_doc_names_cover_all_slugs():
@@ -38,6 +37,18 @@ def test_extract_fields_from_csa():
     assert "Provider" in fields
     # No duplicates
     assert len(fields) == len(set(fields))
+
+
+def test_coverpage_fields_are_defined():
+    assert "Purpose" in COVERPAGE_FIELDS
+    assert "Effective Date" in COVERPAGE_FIELDS
+    assert "Governing Law State" in COVERPAGE_FIELDS
+
+
+def test_get_template_coverpage_loads():
+    text = get_template("mutual-nda-coverpage")
+    assert len(text) > 50
+    assert "Mutual Non-Disclosure Agreement" in text
 
 
 def test_extract_fields_empty_template():

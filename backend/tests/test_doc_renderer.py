@@ -48,3 +48,20 @@ def test_render_generic_doc_empty_fields_shows_placeholders():
     # Should still produce valid HTML
     assert "<!DOCTYPE html>" in html
     assert "[Customer]" in html or "[Provider]" in html
+
+
+def test_render_generic_doc_converts_header_spans():
+    """Header spans (header_2, header_3) should render as bold text, not raw HTML."""
+    html = render_generic_doc("csa", {})
+    assert '<span class="header_2"' not in html
+    assert '<span class="header_3"' not in html
+
+
+def test_render_coverpage_replaces_bracket_placeholders():
+    html = render_generic_doc(
+        "mutual-nda-coverpage",
+        {"Purpose": "Business evaluation", "Effective Date": "2026-01-01"},
+    )
+    assert "Business evaluation" in html
+    assert "2026-01-01" in html
+    assert "[Today's date]" not in html

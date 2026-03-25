@@ -11,6 +11,7 @@ const SLUGS = [
   "pilot-agreement",
   "baa",
   "ai-addendum",
+  "mutual-nda-coverpage",
 ];
 
 export function generateStaticParams() {

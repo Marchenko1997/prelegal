@@ -4,6 +4,14 @@ import markdown as md_lib
 
 from services.doc_chat import DOC_NAMES, get_template
 
+BRACKET_FIELDS: dict[str, str] = {
+    "Purpose": "[Evaluating whether to enter into a business relationship with the other party.]",
+    "Effective Date": "[Today's date]",
+    "Governing Law State": "[Fill in state]",
+    "Jurisdiction": '[Fill in city or county and state, i.e. "courts located in New Castle, DE"]',
+    "Modifications": "List any modifications to the MNDA",
+}
+
 
 def _normalize(name: str) -> str:
     """Normalize Unicode smart apostrophes to ASCII."""
@@ -63,6 +71,17 @@ def render_generic_doc(
     doc_name = title or DOC_NAMES.get(doc_type, doc_type)
 
     text = _replace_spans(template_md, fields)
+
+    # Convert header spans into bold markdown so they render visibly
+    text = re.sub(r'<span class="header_2"[^>]*>([^<]+)</span>', r'**\1**', text)
+    text = re.sub(r'<span class="header_3"[^>]*>([^<]+)</span>', r'**\1**', text)
+
+    # Replace bracket placeholders (Mutual NDA Cover Page)
+    for field_name, bracket in BRACKET_FIELDS.items():
+        value = fields.get(field_name)
+        if value:
+            text = text.replace(bracket, value)
+
     body_html = md_lib.markdown(text, extensions=["tables"])
     key_terms_html = _build_key_terms_section(fields)
 

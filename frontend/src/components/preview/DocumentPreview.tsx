@@ -22,7 +22,7 @@ export function DocumentPreview({ coverpageHtml, termsHtml }: DocumentPreviewPro
       {/* Cover Page */}
       <div
         dangerouslySetInnerHTML={{ __html: coverpageHtml }}
-        className="nda-content"
+        className="doc-content"
       />
 
       {/* Page Break indicator */}
@@ -33,7 +33,7 @@ export function DocumentPreview({ coverpageHtml, termsHtml }: DocumentPreviewPro
       {/* Standard Terms */}
       <div
         dangerouslySetInnerHTML={{ __html: termsHtml }}
-        className="nda-content"
+        className="doc-content"
       />
     </div>
   );
