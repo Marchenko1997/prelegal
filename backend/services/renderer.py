@@ -6,7 +6,15 @@ import markdown as md_lib
 
 from models.nda import NdaRequest
 
-TEMPLATES_DIR = Path(__file__).parent.parent.parent / "templates"
+def _find_templates_dir() -> Path:
+    """Locate templates/ — works in Docker (/app/templates) and local dev (../templates)."""
+    here = Path(__file__).parent.parent
+    for candidate in [here / "templates", here.parent / "templates"]:
+        if candidate.exists():
+            return candidate
+    raise FileNotFoundError(f"templates directory not found (searched from {here})")
+
+TEMPLATES_DIR = _find_templates_dir()
 
 
 def _format_date(iso_date: str) -> str:

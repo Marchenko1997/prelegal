@@ -4,7 +4,7 @@ from litellm import completion
 
 from models.chat import ChatMessage, ChatNdaFields, ChatResponse
 
-MODEL = "openrouter/openai/gpt-oss-120b:free"
+MODEL = "openrouter/arcee-ai/trinity-large-preview:free"
 EXTRA_BODY = {"provider": {"order": ["cerebras"]}}
 
 _SYSTEM_PROMPT = """\
@@ -38,10 +38,12 @@ Party 2 fields:
 
 ## Rules
 - On the very first message greet the user warmly and ask your first question.
-- Ask questions in a logical order; group related fields naturally.
+- Collect fields in this order: agreement fields first, then ALL Party 1 fields, then ALL Party 2 fields.
+- IMPORTANT: This is a MUTUAL NDA. Both parties must provide details. Do NOT skip or forget Party 2.
 - Keep replies concise and conversational.
 - Always carry forward ALL previously collected fields in every response.
-- When all fields are filled, congratulate the user and tell them to click "Download PDF".
+- Before congratulating the user, check that every party1_* AND every party2_* field is non-null. If any are still null, ask for them.
+- Only when ALL 17 fields are non-null: congratulate the user and tell them to click "Download PDF".
 
 ## Response format (JSON only — no extra text)
 {
@@ -89,7 +91,6 @@ def call_chat(conversation: list[ChatMessage], current_fields: ChatNdaFields) ->
         model=MODEL,
         messages=messages,
         response_format=ChatResponse,
-        reasoning_effort="low",
         extra_body=EXTRA_BODY,
         api_key=os.getenv("OPENROUTER_API_KEY"),
     )
