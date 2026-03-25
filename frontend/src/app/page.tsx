@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8001";
 
 interface CatalogItem {
   name: string;
@@ -11,9 +11,18 @@ interface CatalogItem {
   filename: string;
 }
 
-const AVAILABLE: Record<string, string> = {
+// Documents that use a special dedicated route
+const SPECIAL_ROUTES: Record<string, string> = {
   "Mutual Non-Disclosure Agreement": "/nda",
+  "Mutual NDA Cover Page": "/nda",
 };
+
+function getRoute(item: CatalogItem): string {
+  if (SPECIAL_ROUTES[item.name]) return SPECIAL_ROUTES[item.name];
+  // Derive slug from template filename: "templates/CSA.md" → "csa"
+  const slug = item.filename.replace("templates/", "").replace(".md", "").toLowerCase();
+  return `/doc/${slug}`;
+}
 
 export default function HomePage() {
   const [catalog, setCatalog] = useState<CatalogItem[]>([]);
@@ -50,8 +59,8 @@ export default function HomePage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {catalog.map((item) => {
-              const href = AVAILABLE[item.name];
-              return href ? (
+              const href = getRoute(item);
+              return (
                 <Link
                   key={item.name}
                   href={href}
@@ -67,21 +76,6 @@ export default function HomePage() {
                     Create →
                   </span>
                 </Link>
-              ) : (
-                <div
-                  key={item.name}
-                  className="bg-white rounded-lg border border-gray-100 p-5 opacity-60 cursor-not-allowed"
-                >
-                  <h2 className="font-semibold text-brand-navy mb-2 text-sm">
-                    {item.name}
-                  </h2>
-                  <p className="text-xs text-brand-gray leading-relaxed">
-                    {item.description}
-                  </p>
-                  <span className="mt-3 inline-block text-xs font-medium text-brand-gray">
-                    Coming soon
-                  </span>
-                </div>
               );
             })}
           </div>

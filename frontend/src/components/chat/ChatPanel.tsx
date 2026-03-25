@@ -1,10 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ChatMessage } from "@/lib/chatApi";
+
+interface Message {
+  role: "user" | "assistant";
+  content: string;
+}
 
 interface ChatPanelProps {
-  messages: ChatMessage[];
+  messages: Message[];
   isLoading: boolean;
   onSend: (text: string) => void;
 }
@@ -12,10 +16,17 @@ interface ChatPanelProps {
 export function ChatPanel({ messages, isLoading, onSend }: ChatPanelProps) {
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isLoading]);
+
+  useEffect(() => {
+    if (!isLoading) {
+      inputRef.current?.focus();
+    }
+  }, [isLoading]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -67,6 +78,7 @@ export function ChatPanel({ messages, isLoading, onSend }: ChatPanelProps) {
         className="border-t border-gray-200 px-4 py-3 flex gap-2"
       >
         <input
+          ref={inputRef}
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
