@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import {
   DocChatMessage,
   fetchDocTemplate,
@@ -10,6 +9,10 @@ import {
 } from "@/lib/docChatApi";
 import { renderGenericTemplate } from "@/lib/genericRenderer";
 import { ChatPanel } from "@/components/chat/ChatPanel";
+import { NavBar } from "@/components/NavBar";
+import { useAuth } from "@/lib/auth";
+import { saveDocument } from "@/lib/documentsApi";
+import { DISCLAIMER } from "@/lib/disclaimer";
 import { printDocument } from "@/lib/printDocument";
 
 const DOC_NAMES: Record<string, string> = {
@@ -31,6 +34,7 @@ interface Props {
 }
 
 export function DocChatClient({ slug }: Props) {
+  const { user, loading: authLoading } = useAuth();
   const docName = DOC_NAMES[slug] ?? slug;
 
   const [messages, setMessages] = useState<DocChatMessage[]>([]);
@@ -40,14 +44,12 @@ export function DocChatClient({ slug }: Props) {
   const [templateMd, setTemplateMd] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // Load template for live preview
   useEffect(() => {
     fetchDocTemplate(slug)
       .then(setTemplateMd)
       .catch(() => {});
   }, [slug]);
 
-  // Greet user on mount
   useEffect(() => {
     async function greet() {
       setIsLoading(true);
@@ -95,6 +97,8 @@ export function DocChatClient({ slug }: Props) {
     setIsGenerating(true);
     try {
       const { html } = await generateDoc(slug, currentFields, docName);
+      saveDocument({ doc_type: slug, title: docName, fields: currentFields, html })
+        .catch(() => {});
       printDocument(html);
     } catch {
       setChatError("Failed to generate document. Please try again.");
@@ -103,24 +107,34 @@ export function DocChatClient({ slug }: Props) {
     }
   }
 
+  if (authLoading || !user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-brand-gray text-sm">Loading...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="h-screen flex flex-col">
-      {/* Header */}
-      <header className="bg-brand-navy text-white px-6 py-3 flex items-center justify-between shrink-0">
-        <div>
-          <Link href="/" className="text-xs text-brand-gray hover:text-white mr-3">
-            ← Back
-          </Link>
-          <span className="font-semibold text-sm">{docName}</span>
-        </div>
-        <button
-          onClick={handleDownload}
-          disabled={isGenerating}
-          className="bg-brand-purple text-white px-4 py-1.5 rounded-lg text-xs font-semibold hover:opacity-90 disabled:opacity-50"
-        >
-          {isGenerating ? "Generating..." : "Download PDF"}
-        </button>
-      </header>
+      <NavBar
+        title={docName}
+        backHref="/"
+        rightSlot={
+          <button
+            onClick={handleDownload}
+            disabled={isGenerating}
+            className="bg-brand-purple text-white px-4 py-1.5 rounded-lg text-xs font-semibold hover:opacity-90 disabled:opacity-50"
+          >
+            {isGenerating ? "Generating..." : "Download PDF"}
+          </button>
+        }
+      />
+
+      {/* Disclaimer banner */}
+      <div className="bg-amber-50 border-b border-amber-200 px-6 py-1.5 text-xs text-amber-700 shrink-0">
+        {DISCLAIMER}
+      </div>
 
       {/* Main split pane */}
       <div className="flex flex-1 overflow-hidden">

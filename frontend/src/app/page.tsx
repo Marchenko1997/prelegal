@@ -2,6 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useAuth } from "@/lib/auth";
+import { NavBar } from "@/components/NavBar";
+import { MyDocuments } from "@/components/MyDocuments";
+import { DISCLAIMER } from "@/lib/disclaimer";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8001";
 
@@ -11,19 +15,18 @@ interface CatalogItem {
   filename: string;
 }
 
-// Documents that use a special dedicated route
 const SPECIAL_ROUTES: Record<string, string> = {
   "Mutual Non-Disclosure Agreement": "/nda",
 };
 
 function getRoute(item: CatalogItem): string {
   if (SPECIAL_ROUTES[item.name]) return SPECIAL_ROUTES[item.name];
-  // Derive slug from template filename: "templates/CSA.md" → "csa"
   const slug = item.filename.replace("templates/", "").replace(".md", "").toLowerCase();
   return `/doc/${slug}`;
 }
 
 export default function HomePage() {
+  const { user, loading: authLoading } = useAuth();
   const [catalog, setCatalog] = useState<CatalogItem[]>([]);
 
   useEffect(() => {
@@ -33,19 +36,19 @@ export default function HomePage() {
       .catch(() => {});
   }, []);
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-brand-navy text-white py-4 px-8 flex items-center justify-between">
-        <span className="text-xl font-bold tracking-tight">Prelegal</span>
-        <Link
-          href="/login"
-          className="text-sm text-brand-gray hover:text-white transition-colors"
-        >
-          Sign out
-        </Link>
-      </header>
+  if (authLoading || !user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-brand-gray text-sm">Loading...</p>
+      </div>
+    );
+  }
 
-      <main className="max-w-5xl mx-auto px-6 py-12">
+  return (
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <NavBar />
+
+      <main className="flex-1 max-w-5xl mx-auto px-6 py-12 w-full">
         <h1 className="text-3xl font-bold text-brand-navy mb-2">
           Document Templates
         </h1>
@@ -79,7 +82,15 @@ export default function HomePage() {
             })}
           </div>
         )}
+
+        <MyDocuments />
       </main>
+
+      <footer className="max-w-5xl mx-auto px-6 pb-8 w-full">
+        <p className="text-xs text-brand-gray text-center border-t border-gray-200 pt-6">
+          {DISCLAIMER}
+        </p>
+      </footer>
     </div>
   );
 }

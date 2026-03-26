@@ -1,13 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { NdaFormData, defaultFormData } from "@/types/nda";
 import { ChatMessage, ChatNdaFields, emptyFields, sendChatMessage } from "@/lib/chatApi";
 import { useTemplateRenderer } from "@/hooks/useTemplateRenderer";
 import { DocumentPreview } from "@/components/preview/DocumentPreview";
 import { ChatPanel } from "@/components/chat/ChatPanel";
 import { SignatureModal } from "@/components/chat/SignatureModal";
+import { NavBar } from "@/components/NavBar";
+import { useAuth } from "@/lib/auth";
+import { DISCLAIMER } from "@/lib/disclaimer";
 
 function fieldsToFormData(fields: ChatNdaFields): NdaFormData {
   const today = new Date().toISOString().split("T")[0];
@@ -41,6 +43,7 @@ function fieldsToFormData(fields: ChatNdaFields): NdaFormData {
 }
 
 export default function NdaPage() {
+  const { user, loading: authLoading } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [currentFields, setCurrentFields] = useState<ChatNdaFields>(emptyFields);
   const [isLoading, setIsLoading] = useState(false);
@@ -50,7 +53,6 @@ export default function NdaPage() {
   const formData = useMemo(() => fieldsToFormData(currentFields), [currentFields]);
   const { coverpageHtml, termsHtml } = useTemplateRenderer(formData);
 
-  // Greet the user immediately on mount
   useEffect(() => {
     async function greet() {
       setIsLoading(true);
@@ -88,24 +90,33 @@ export default function NdaPage() {
     [messages, currentFields]
   );
 
+  if (authLoading || !user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-brand-gray text-sm">Loading...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="h-screen flex flex-col">
-      {/* Header */}
-      <header className="bg-brand-navy text-white px-6 py-3 flex items-center justify-between shrink-0">
-        <div>
-          <Link href="/" className="text-xs text-brand-gray hover:text-white mr-3">
-            ← Back
-          </Link>
-          <span className="font-semibold text-sm">Mutual NDA Creator</span>
-          <span className="text-brand-gray text-xs ml-2">· Common Paper Version 1.0</span>
-        </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="bg-brand-purple text-white px-4 py-1.5 rounded-lg text-xs font-semibold hover:opacity-90"
-        >
-          Download PDF
-        </button>
-      </header>
+      <NavBar
+        title="Mutual NDA Creator"
+        backHref="/"
+        rightSlot={
+          <button
+            onClick={() => setShowModal(true)}
+            className="bg-brand-purple text-white px-4 py-1.5 rounded-lg text-xs font-semibold hover:opacity-90"
+          >
+            Download PDF
+          </button>
+        }
+      />
+
+      {/* Disclaimer banner */}
+      <div className="bg-amber-50 border-b border-amber-200 px-6 py-1.5 text-xs text-amber-700 shrink-0">
+        {DISCLAIMER}
+      </div>
 
       {/* Main split pane */}
       <div className="flex flex-1 overflow-hidden">

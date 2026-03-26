@@ -1,6 +1,7 @@
 import copy
 import pytest
 from httpx import AsyncClient, ASGITransport
+from database import init_db
 from main import app
 
 VALID_PARTY = {
@@ -25,6 +26,12 @@ VALID_PAYLOAD = {
     "party1": VALID_PARTY,
     "party2": {**VALID_PARTY, "print_name": "Bob Jones", "company": "Widget Inc"},
 }
+
+
+@pytest.fixture(autouse=True)
+def fresh_db():
+    """Ensure every test starts with a clean database."""
+    init_db()
 
 
 @pytest.fixture

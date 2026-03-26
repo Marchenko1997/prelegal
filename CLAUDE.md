@@ -8,7 +8,7 @@ The available documents are covered in the catalog.json file in the project root
 
 @catalog.json
 
-The current implementation supports the Mutual NDA document with AI chat for field collection.
+The current implementation supports all 12 document templates with AI chat for field collection.
 
 ## Development process
 
@@ -73,6 +73,27 @@ Backend available at http://localhost:8001 (docker-compose maps 8001→8000 insi
 - "Download PDF" button available at any time — opens signature modal (canvas pads for both parties) then generates PDF
 - docker-compose.yml passes OPENROUTER_API_KEY via env_file; .dockerignore excludes **/.next and **/out
 
-### Not Yet Implemented
-- Functional authentication (signup/signin/session management)
-- Support for other document templates beyond Mutual NDA
+### Completed (PL-6)
+- All 12 document templates now supported with generic AI chat, live preview, and PDF download
+- Generic doc routes at /doc/[slug] with split-pane UI (chat left, document preview right)
+- POST /api/doc-chat, GET /api/doc-templates/{slug}, POST /api/generate-doc backend routes
+- Field extraction from span markers (keyterms_link, coverpage_link, orderform_link, sow_link)
+- Smart apostrophe normalization and possessive-form resolution for field names
+- Mutual NDA Cover Page uses bracket placeholder substitution (hardcoded field list)
+- Header spans (header_2, header_3) converted to bold markdown for proper rendering
+- Shared doc-content CSS class for consistent document preview styling across all templates
+- Chat input auto-focuses after AI response; AI asks follow-on questions when info is incomplete
+- Templates sourced from Common Paper (https://commonpaper.com), licensed CC BY 4.0
+
+### Completed (PL-7)
+- Functional authentication: signup/signin with bcrypt password hashing, cookie-based sessions
+- Tabbed login page (sign in / sign up) with real error handling
+- Auth guard on all pages — unauthenticated users redirected to /login
+- POST /api/auth/signup, POST /api/auth/signin, POST /api/auth/signout, GET /api/auth/me
+- Document history: documents saved to SQLite on PDF download, shown on home page
+- POST /api/documents (save), GET /api/documents (list user's documents)
+- My Documents section on home page with preview modal and re-download
+- Consistent NavBar component across all pages (logo, user email, sign out)
+- Disclaimer on login page, home page footer, editor page banners, and generated PDFs
+- UI polish: professional consistent styling, fixed stale login API_BASE port
+- sessions and documents tables in SQLite (ephemeral, reset on container restart)

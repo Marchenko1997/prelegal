@@ -14,8 +14,8 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Mutual NDA Creator | Prelegal",
-  description: "Create a Mutual Non-Disclosure Agreement based on Common Paper MNDA Version 1.0",
+  title: "Prelegal - AI-Assisted Legal Document Drafting",
+  description: "Draft legal agreements with AI assistance. Professional templates for NDAs, service agreements, and more.",
 };
 
 export default function RootLayout({

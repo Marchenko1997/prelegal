@@ -255,6 +255,10 @@ def render_nda(data: NdaRequest) -> str:
   <div class="standard-terms">
     {terms_html}
   </div>
+  <footer style="margin-top:2in;padding-top:12px;border-top:1px solid #ccc;font-size:9pt;color:#666;font-style:italic;">
+    This document is an AI-generated draft for reference only and does not constitute legal advice.
+    It should be reviewed by a qualified attorney before use.
+  </footer>
 </body>
 </html>"""
 
