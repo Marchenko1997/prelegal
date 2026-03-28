@@ -56,44 +56,42 @@ Backend available at http://localhost:8001 (docker-compose maps 8001→8000 insi
 
 ## Implementation Status
 
-### Completed (PL-4)
+All core features are complete. The platform is functional end-to-end.
+
+### PL-4: Infrastructure
 - Docker multi-stage build (Node frontend + Python backend)
 - FastAPI backend with SQLite (fresh DB each container start)
-- Next.js static export served by FastAPI at localhost:8001
-- Placeholder auth routes: POST /api/auth/signup, POST /api/auth/signin, GET /api/auth/me (all return 501/401)
+- Next.js 14 static export served by FastAPI at localhost:8001
 - Start/stop scripts for Mac, Linux, Windows
-- Home page: catalog grid fetched from GET /api/catalog; Mutual NDA clickable, others show "Coming soon"
-- Login page: frontend UI only — always proceeds to home (no real auth)
 - Backend routes: GET /api/health, GET /api/catalog, GET /api/templates/{name}, POST /api/generate
 
-### Completed (PL-5)
-- Replaced 5-step wizard with free-form AI chat (split-pane: chat left, live document preview right)
+### PL-5: AI Chat & NDA Editor
+- Free-form AI chat with split-pane UI (chat left, live document preview right)
 - POST /api/chat: LiteLLM + OpenRouter (Cerebras, `arcee-ai/trinity-large-preview:free`), Structured Outputs
-- AI greets user on load, collects all NDA text fields for both parties progressively
-- "Download PDF" button available at any time — opens signature modal (canvas pads for both parties) then generates PDF
-- docker-compose.yml passes OPENROUTER_API_KEY via env_file; .dockerignore excludes **/.next and **/out
+- AI greets user on load, collects all NDA text fields progressively
+- Signature modal with canvas pads for both parties, then PDF download
+- docker-compose.yml passes OPENROUTER_API_KEY via env_file
 
-### Completed (PL-6)
-- All 12 document templates now supported with generic AI chat, live preview, and PDF download
-- Generic doc routes at /doc/[slug] with split-pane UI (chat left, document preview right)
-- POST /api/doc-chat, GET /api/doc-templates/{slug}, POST /api/generate-doc backend routes
+### PL-6: All 12 Document Templates
+- Generic doc routes at /doc/[slug] with split-pane UI
+- POST /api/doc-chat, GET /api/doc-templates/{slug}, POST /api/generate-doc
 - Field extraction from span markers (keyterms_link, coverpage_link, orderform_link, sow_link)
-- Smart apostrophe normalization and possessive-form resolution for field names
-- Mutual NDA Cover Page uses bracket placeholder substitution (hardcoded field list)
-- Header spans (header_2, header_3) converted to bold markdown for proper rendering
-- Shared doc-content CSS class for consistent document preview styling across all templates
-- Chat input auto-focuses after AI response; AI asks follow-on questions when info is incomplete
+- Smart apostrophe normalization and possessive-form resolution
+- Bracket placeholder substitution for Mutual NDA Cover Page
+- Header spans (header_2, header_3) converted to bold markdown
 - Templates sourced from Common Paper (https://commonpaper.com), licensed CC BY 4.0
 
-### Completed (PL-7)
-- Functional authentication: signup/signin with bcrypt password hashing, cookie-based sessions
-- Tabbed login page (sign in / sign up) with real error handling
-- Auth guard on all pages — unauthenticated users redirected to /login
+### PL-7: Auth, Document History & Polish
+- Authentication: signup/signin with bcrypt, cookie-based sessions
 - POST /api/auth/signup, POST /api/auth/signin, POST /api/auth/signout, GET /api/auth/me
-- Document history: documents saved to SQLite on PDF download, shown on home page
+- Auth guard on all pages — unauthenticated users redirected to /login
+- Document history: saved to SQLite on PDF download, listed on home page
 - POST /api/documents (save), GET /api/documents (list user's documents)
-- My Documents section on home page with preview modal and re-download
-- Consistent NavBar component across all pages (logo, user email, sign out)
-- Disclaimer on login page, home page footer, editor page banners, and generated PDFs
-- UI polish: professional consistent styling, fixed stale login API_BASE port
+- My Documents: preview modal with Continue Editing, Download PDF, and Close
+- Continue Editing navigates to /doc/[slug]?resume=<id> and restores document state
+- Playwright-based PDF generation (headless Chromium, pixel-accurate to preview)
+- XSS prevention via html.escape in all renderers
+- Mobile-responsive layout with hamburger nav menu
+- NavBar component across all pages (logo, user email, sign out)
+- Disclaimer on login page, home page footer, editor banners, and generated PDFs
 - sessions and documents tables in SQLite (ephemeral, reset on container restart)
