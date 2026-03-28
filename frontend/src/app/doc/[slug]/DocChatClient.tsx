@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   DocChatMessage,
   fetchDocTemplate,
@@ -11,7 +12,7 @@ import { renderGenericTemplate } from "@/lib/genericRenderer";
 import { ChatPanel } from "@/components/chat/ChatPanel";
 import { NavBar } from "@/components/NavBar";
 import { useAuth } from "@/lib/auth";
-import { saveDocument } from "@/lib/documentsApi";
+import { saveDocument, getDocument } from "@/lib/documentsApi";
 import { DISCLAIMER } from "@/lib/disclaimer";
 import { printDocument } from "@/lib/printDocument";
 
@@ -35,6 +36,7 @@ interface Props {
 
 export function DocChatClient({ slug }: Props) {
   const { user, loading: authLoading } = useAuth();
+  const searchParams = useSearchParams();
   const docName = DOC_NAMES[slug] ?? slug;
 
   const [messages, setMessages] = useState<DocChatMessage[]>([]);
@@ -42,28 +44,47 @@ export function DocChatClient({ slug }: Props) {
   const [isLoading, setIsLoading] = useState(false);
   const [chatError, setChatError] = useState<string | null>(null);
   const [templateMd, setTemplateMd] = useState<string>("");
+  const [templateError, setTemplateError] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [mobileTab, setMobileTab] = useState<"chat" | "preview">("chat");
 
-  useEffect(() => {
+  function loadTemplate() {
+    setTemplateError(false);
     fetchDocTemplate(slug)
       .then(setTemplateMd)
-      .catch(() => {});
-  }, [slug]);
+      .catch(() => setTemplateError(true));
+  }
 
   useEffect(() => {
-    async function greet() {
+    loadTemplate();
+  }, [slug]);
+
+  // Resume from saved document or greet on mount
+  useEffect(() => {
+    const resumeId = searchParams.get("resume");
+    if (resumeId) {
+      getDocument(Number(resumeId))
+        .then((doc) => {
+          setCurrentFields(doc.fields as Record<string, string | null>);
+          setMessages([{ role: "assistant", content: "Welcome back! Your saved document has been loaded. Continue chatting to make changes." }]);
+        })
+        .catch(() => {
+          setChatError("Failed to load saved document. Starting fresh.");
+        });
+    } else {
       setIsLoading(true);
-      try {
-        const res = await sendDocChatMessage(slug, [], {});
-        setMessages([{ role: "assistant", content: res.reply }]);
-        setCurrentFields(res.fields);
-      } catch {
-        setChatError("Failed to connect to the AI. Please refresh and try again.");
-      } finally {
-        setIsLoading(false);
-      }
+      sendDocChatMessage(slug, [], {})
+        .then((res) => {
+          setMessages([{ role: "assistant", content: res.reply }]);
+          setCurrentFields(res.fields);
+        })
+        .catch(() => {
+          setChatError("Failed to connect to the AI. Please refresh and try again.");
+        })
+        .finally(() => setIsLoading(false));
     }
-    greet();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
 
@@ -93,13 +114,24 @@ export function DocChatClient({ slug }: Props) {
     return renderGenericTemplate(templateMd, currentFields);
   }, [templateMd, currentFields]);
 
+  function handleSave() {
+    setIsSaving(true);
+    saveDocument({ doc_type: slug, title: docName, fields: currentFields, html: previewHtml })
+      .then(() => {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
+      })
+      .catch(() => setChatError("Failed to save document."))
+      .finally(() => setIsSaving(false));
+  }
+
   async function handleDownload() {
     setIsGenerating(true);
     try {
       const { html } = await generateDoc(slug, currentFields, docName);
       saveDocument({ doc_type: slug, title: docName, fields: currentFields, html })
         .catch(() => {});
-      printDocument(html);
+      await printDocument(html);
     } catch {
       setChatError("Failed to generate document. Please try again.");
     } finally {
@@ -121,13 +153,22 @@ export function DocChatClient({ slug }: Props) {
         title={docName}
         backHref="/"
         rightSlot={
-          <button
-            onClick={handleDownload}
-            disabled={isGenerating}
-            className="bg-brand-purple text-white px-4 py-1.5 rounded-lg text-xs font-semibold hover:opacity-90 disabled:opacity-50"
-          >
-            {isGenerating ? "Generating..." : "Download PDF"}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="bg-brand-blue text-white px-4 py-1.5 rounded-lg text-xs font-semibold hover:opacity-90 disabled:opacity-50"
+            >
+              {saved ? "Saved" : isSaving ? "Saving..." : "Save"}
+            </button>
+            <button
+              onClick={handleDownload}
+              disabled={isGenerating}
+              className="bg-brand-purple text-white px-4 py-1.5 rounded-lg text-xs font-semibold hover:opacity-90 disabled:opacity-50"
+            >
+              {isGenerating ? "Generating..." : "Download PDF"}
+            </button>
+          </div>
         }
       />
 
@@ -136,11 +177,27 @@ export function DocChatClient({ slug }: Props) {
         {DISCLAIMER}
       </div>
 
+      {/* Mobile tab toggle */}
+      <div className="flex md:hidden border-b border-gray-200 shrink-0">
+        <button
+          onClick={() => setMobileTab("chat")}
+          className={`flex-1 py-2 text-xs font-semibold text-center ${mobileTab === "chat" ? "text-brand-blue border-b-2 border-brand-blue" : "text-brand-gray"}`}
+        >
+          Chat
+        </button>
+        <button
+          onClick={() => setMobileTab("preview")}
+          className={`flex-1 py-2 text-xs font-semibold text-center ${mobileTab === "preview" ? "text-brand-blue border-b-2 border-brand-blue" : "text-brand-gray"}`}
+        >
+          Preview
+        </button>
+      </div>
+
       {/* Main split pane */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
         {/* Left: Chat */}
-        <div className="w-2/5 flex flex-col border-r border-gray-200 bg-white">
-          <div className="px-4 py-3 border-b border-gray-100 shrink-0">
+        <div className={`${mobileTab === "chat" ? "flex" : "hidden"} md:flex w-full md:w-2/5 flex-col border-r border-gray-200 bg-white flex-1 md:flex-initial`}>
+          <div className="px-4 py-3 border-b border-gray-100 shrink-0 hidden md:block">
             <p className="text-xs font-medium text-brand-navy">AI Assistant</p>
             <p className="text-xs text-brand-gray">Answers update the document preview live</p>
           </div>
@@ -156,15 +213,25 @@ export function DocChatClient({ slug }: Props) {
         </div>
 
         {/* Right: Document preview */}
-        <div className="flex-1 flex flex-col bg-gray-50 overflow-hidden">
-          <div className="px-6 py-3 border-b border-gray-200 shrink-0">
+        <div className={`${mobileTab === "preview" ? "flex" : "hidden"} md:flex flex-1 flex-col bg-gray-50 overflow-hidden`}>
+          <div className="px-6 py-3 border-b border-gray-200 shrink-0 hidden md:block">
             <p className="text-xs font-medium text-brand-navy">Document Preview</p>
             <p className="text-xs text-brand-gray">Updates as you chat</p>
           </div>
-          <div className="flex-1 overflow-auto p-6">
-            {previewHtml ? (
+          <div className="flex-1 overflow-auto p-4 md:p-6">
+            {templateError ? (
+              <div className="flex flex-col items-center justify-center h-full gap-3">
+                <p className="text-red-600 text-sm">Failed to load document template.</p>
+                <button
+                  onClick={loadTemplate}
+                  className="bg-brand-blue text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90"
+                >
+                  Retry
+                </button>
+              </div>
+            ) : previewHtml ? (
               <div
-                className="bg-white rounded-lg shadow-sm p-8 doc-content"
+                className="bg-white rounded-lg shadow-sm p-4 md:p-8 doc-content"
                 dangerouslySetInnerHTML={{ __html: previewHtml }}
               />
             ) : (

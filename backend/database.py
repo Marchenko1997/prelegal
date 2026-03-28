@@ -43,7 +43,9 @@ def init_db() -> None:
             fields_json TEXT NOT NULL,
             html TEXT NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users(id)
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id),
+            UNIQUE (user_id, doc_type)
         )
     """)
     conn.commit()

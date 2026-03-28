@@ -5,7 +5,18 @@ export interface DocumentRecord {
   doc_type: string;
   title: string;
   created_at: string;
+  updated_at: string;
   html: string;
+}
+
+export interface DocumentDetail {
+  id: number;
+  doc_type: string;
+  title: string;
+  created_at: string;
+  updated_at: string;
+  html: string;
+  fields: Record<string, string | number | null>;
 }
 
 export async function saveDocument(payload: {
@@ -29,5 +40,13 @@ export async function getDocuments(): Promise<DocumentRecord[]> {
     credentials: "include",
   });
   if (!r.ok) throw new Error("Failed to fetch documents");
+  return r.json();
+}
+
+export async function getDocument(id: number): Promise<DocumentDetail> {
+  const r = await fetch(`${API_BASE}/api/documents/${id}`, {
+    credentials: "include",
+  });
+  if (!r.ok) throw new Error("Failed to fetch document");
   return r.json();
 }

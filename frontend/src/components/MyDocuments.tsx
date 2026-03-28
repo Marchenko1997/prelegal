@@ -1,19 +1,34 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { DocumentRecord, getDocuments } from "@/lib/documentsApi";
 import { printDocument } from "@/lib/printDocument";
 
+function resumeHref(doc: DocumentRecord): string {
+  if (doc.doc_type === "mutual-nda") return `/nda?resume=${doc.id}`;
+  return `/doc/${doc.doc_type}?resume=${doc.id}`;
+}
+
 export function MyDocuments() {
+  const router = useRouter();
   const [docs, setDocs] = useState<DocumentRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [previewDoc, setPreviewDoc] = useState<DocumentRecord | null>(null);
 
-  useEffect(() => {
+  function fetchDocs() {
+    setLoading(true);
+    setError(false);
     getDocuments()
       .then(setDocs)
-      .catch(() => {})
+      .catch(() => setError(true))
       .finally(() => setLoading(false));
+  }
+
+  useEffect(() => {
+    fetchDocs();
   }, []);
 
   if (loading) {
@@ -22,7 +37,23 @@ export function MyDocuments() {
     );
   }
 
+  if (error) {
+    return (
+      <section className="mt-12">
+        <h2 className="text-xl font-bold text-brand-navy mb-4">My Documents</h2>
+        <p className="text-red-600 text-sm">
+          Failed to load documents.{" "}
+          <button onClick={fetchDocs} className="text-brand-blue underline hover:opacity-80">
+            Retry
+          </button>
+        </p>
+      </section>
+    );
+  }
+
   if (docs.length === 0) return null;
+
+  const displayed = docs.slice(0, 3);
 
   function formatDate(iso: string) {
     try {
@@ -40,9 +71,17 @@ export function MyDocuments() {
 
   return (
     <section className="mt-12">
-      <h2 className="text-xl font-bold text-brand-navy mb-4">My Documents</h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-bold text-brand-navy">My Documents</h2>
+        <Link
+          href="/documents"
+          className="text-xs font-medium text-brand-blue hover:underline"
+        >
+          View all →
+        </Link>
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {docs.map((doc) => (
+        {displayed.map((doc) => (
           <button
             key={doc.id}
             onClick={() => setPreviewDoc(doc)}
@@ -52,7 +91,7 @@ export function MyDocuments() {
               {doc.title}
             </h3>
             <p className="text-xs text-brand-gray">
-              {formatDate(doc.created_at)}
+              {formatDate(doc.updated_at)}
             </p>
           </button>
         ))}
@@ -66,6 +105,15 @@ export function MyDocuments() {
                 {previewDoc.title}
               </h3>
               <div className="flex items-center gap-3">
+                <button
+                  onClick={() => {
+                    router.push(resumeHref(previewDoc));
+                    setPreviewDoc(null);
+                  }}
+                  className="bg-brand-blue text-white px-4 py-1.5 rounded-lg text-xs font-semibold hover:opacity-90"
+                >
+                  Continue Editing
+                </button>
                 <button
                   onClick={() => printDocument(previewDoc.html)}
                   className="bg-brand-purple text-white px-4 py-1.5 rounded-lg text-xs font-semibold hover:opacity-90"

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { DocChatClient } from "./DocChatClient";
 
 const SLUGS = [
@@ -19,5 +20,13 @@ export function generateStaticParams() {
 }
 
 export default function DocPage({ params }: { params: { slug: string } }) {
-  return <DocChatClient slug={params.slug} />;
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-brand-gray text-sm">Loading...</p>
+      </div>
+    }>
+      <DocChatClient slug={params.slug} />
+    </Suspense>
+  );
 }

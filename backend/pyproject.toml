@@ -12,6 +12,8 @@ dependencies = [
     "markdown>=3.6",
     "litellm>=1.82.6",
     "bcrypt>=5.0.0",
+    "playwright>=1.52.0",
+    "fpdf2>=2.8.7",
 ]
 
 [dependency-groups]

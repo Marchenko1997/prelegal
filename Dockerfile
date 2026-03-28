@@ -17,6 +17,9 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 COPY backend/pyproject.toml backend/uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project --link-mode=copy
 
+# Install Playwright Chromium and its system dependencies
+RUN uv run playwright install --with-deps chromium
+
 # Copy backend source, templates, and catalog
 COPY backend/ ./
 COPY templates/ ./templates/

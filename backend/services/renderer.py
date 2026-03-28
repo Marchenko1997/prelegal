@@ -1,3 +1,4 @@
+import html as html_mod
 import re
 from datetime import datetime
 from pathlib import Path
@@ -52,10 +53,10 @@ def _build_signature_table(data: NdaRequest) -> str:
 
     rows = [
         ("Signature", sig1_html, sig2_html),
-        ("Print Name", data.party1.print_name, data.party2.print_name),
-        ("Title", data.party1.title, data.party2.title),
-        ("Company", data.party1.company, data.party2.company),
-        ("Notice Address", data.party1.notice_address, data.party2.notice_address),
+        ("Print Name", html_mod.escape(data.party1.print_name), html_mod.escape(data.party2.print_name)),
+        ("Title", html_mod.escape(data.party1.title), html_mod.escape(data.party2.title)),
+        ("Company", html_mod.escape(data.party1.company), html_mod.escape(data.party2.company)),
+        ("Notice Address", html_mod.escape(data.party1.notice_address), html_mod.escape(data.party2.notice_address)),
         ("Date", formatted_date1, formatted_date2),
     ]
 
@@ -84,7 +85,7 @@ def render_cover_page(data: NdaRequest, template_text: str) -> str:
     text = _safe_replace(
         text,
         "[Evaluating whether to enter into a business relationship with the other party.]",
-        data.purpose,
+        html_mod.escape(data.purpose),
     )
 
     # Effective Date
@@ -142,17 +143,17 @@ def render_cover_page(data: NdaRequest, template_text: str) -> str:
         )
 
     # Governing Law & Jurisdiction
-    text = _safe_replace(text, "[Fill in state]", data.governing_law_state)
+    text = _safe_replace(text, "[Fill in state]", html_mod.escape(data.governing_law_state))
     text = _safe_replace(
         text,
         '[Fill in city or county and state, i.e. "courts located in New Castle, DE"]',
-        data.jurisdiction,
+        html_mod.escape(data.jurisdiction),
     )
 
     # MNDA Modifications
     mods_section = "List any modifications to the MNDA"
     if data.modifications and data.modifications.strip():
-        text = _safe_replace(text, mods_section, data.modifications.strip())
+        text = _safe_replace(text, mods_section, html_mod.escape(data.modifications.strip()))
     else:
         text = _safe_replace(text, mods_section, "_No modifications._")
 
@@ -195,7 +196,8 @@ def render_standard_terms(data: NdaRequest, template_text: str) -> str:
 
     def replace_span(match: re.Match) -> str:
         field_name = match.group(1)
-        return field_map.get(field_name, field_name)
+        value = field_map.get(field_name, field_name)
+        return html_mod.escape(value)
 
     text = re.sub(
         r'<span class="coverpage_link">([^<]+)</span>',

@@ -1,3 +1,4 @@
+import html
 import re
 
 import markdown as md_lib
@@ -29,11 +30,11 @@ def _replace_spans(text: str, fields: dict[str, str | None]) -> str:
         normalized = _normalize(match.group(1))
         value = fields.get(normalized)
         if value:
-            return value
+            return html.escape(value)
         if normalized.endswith("'s"):
             base_value = fields.get(normalized[:-2])
             if base_value:
-                return f"{base_value}'s"
+                return f"{html.escape(base_value)}'s"
         return f"[{normalized}]"
 
     return re.sub(
@@ -50,8 +51,8 @@ def _build_key_terms_section(fields: dict[str, str | None]) -> str:
         return ""
 
     rows = "".join(
-        f'<tr><td style="font-weight:bold;padding:6px 12px 6px 0;vertical-align:top;white-space:nowrap;">{k}</td>'
-        f'<td style="padding:6px 0;">{v}</td></tr>'
+        f'<tr><td style="font-weight:bold;padding:6px 12px 6px 0;vertical-align:top;white-space:nowrap;">{html.escape(k)}</td>'
+        f'<td style="padding:6px 0;">{html.escape(v)}</td></tr>'
         for k, v in filled.items()
     )
 
@@ -68,9 +69,13 @@ def render_generic_doc(
 ) -> str:
     """Render a generic legal document template to a printable HTML string."""
     template_md = get_template(doc_type)
-    doc_name = title or DOC_NAMES.get(doc_type, doc_type)
+    doc_name = html.escape(title or DOC_NAMES.get(doc_type, doc_type))
 
     text = _replace_spans(template_md, fields)
+
+    # Strip the leading markdown title (e.g. "# Cloud Service Agreement")
+    # since we add our own <h1> in the HTML wrapper
+    text = re.sub(r"^#\s+.+\n+", "", text, count=1)
 
     # Convert header spans into bold markdown so they render visibly
     text = re.sub(r'<span class="header_2"[^>]*>([^<]+)</span>', r'**\1**', text)
@@ -80,7 +85,7 @@ def render_generic_doc(
     for field_name, bracket in BRACKET_FIELDS.items():
         value = fields.get(field_name)
         if value:
-            text = text.replace(bracket, value)
+            text = text.replace(bracket, html.escape(value))
 
     body_html = md_lib.markdown(text, extensions=["tables"])
     key_terms_html = _build_key_terms_section(fields)

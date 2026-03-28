@@ -3,90 +3,70 @@ import { printDocument } from "@/lib/printDocument";
 
 describe("printDocument", () => {
   beforeEach(() => {
-    vi.useFakeTimers();
+    vi.clearAllMocks();
+    global.URL.createObjectURL = vi.fn(() => "blob:test-url");
+    global.URL.revokeObjectURL = vi.fn();
   });
 
   afterEach(() => {
-    vi.useRealTimers();
     vi.restoreAllMocks();
   });
 
-  it("primary path: calls print via onload handler", () => {
-    const mockPrint = vi.fn();
-    const mockFocus = vi.fn();
-    const mockWrite = vi.fn();
-    const mockClose = vi.fn();
-    const mockWindow = {
-      print: mockPrint,
-      focus: mockFocus,
-      closed: false,
-      onload: null as (() => void) | null,
-      document: { write: mockWrite, close: mockClose },
-    };
-    vi.spyOn(window, "open").mockReturnValue(mockWindow as unknown as Window);
+  it("sends HTML to backend and triggers PDF download", async () => {
+    const mockBlob = new Blob(["pdf-content"], { type: "application/pdf" });
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      blob: () => Promise.resolve(mockBlob),
+    });
 
-    printDocument("<p>test</p>");
+    const clickSpy = vi.fn();
+    vi.spyOn(document, "createElement").mockReturnValue({
+      set href(_: string) {},
+      set download(_: string) {},
+      click: clickSpy,
+    } as unknown as HTMLElement);
+    vi.spyOn(document.body, "appendChild").mockImplementation((n) => n);
+    vi.spyOn(document.body, "removeChild").mockImplementation((n) => n);
 
-    // Manually invoke the onload handler (simulating the window load event)
-    mockWindow.onload!();
+    await printDocument("<h1>Test</h1>");
 
-    expect(mockPrint).toHaveBeenCalledTimes(1);
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining("/api/pdf"),
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ html: "<h1>Test</h1>", filename: "document.pdf" }),
+      })
+    );
+    expect(clickSpy).toHaveBeenCalledTimes(1);
   });
 
-  it("fallback path: calls print via setTimeout when onload does not fire", () => {
-    const mockPrint = vi.fn();
-    const mockFocus = vi.fn();
-    const mockWrite = vi.fn();
-    const mockClose = vi.fn();
-    const mockWindow = {
-      print: mockPrint,
-      focus: mockFocus,
-      closed: false,
-      onload: null as (() => void) | null,
-      document: { write: mockWrite, close: mockClose },
-    };
-    vi.spyOn(window, "open").mockReturnValue(mockWindow as unknown as Window);
+  it("uses custom filename", async () => {
+    const mockBlob = new Blob(["pdf"], { type: "application/pdf" });
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      blob: () => Promise.resolve(mockBlob),
+    });
+    vi.spyOn(document, "createElement").mockReturnValue({
+      set href(_: string) {},
+      set download(_: string) {},
+      click: vi.fn(),
+    } as unknown as HTMLElement);
+    vi.spyOn(document.body, "appendChild").mockImplementation((n) => n);
+    vi.spyOn(document.body, "removeChild").mockImplementation((n) => n);
 
-    printDocument("<p>test</p>");
+    await printDocument("<p>test</p>", "my-nda.pdf");
 
-    // Do NOT call onload — advance fake timers to trigger the setTimeout fallback
-    vi.advanceTimersByTime(500);
-
-    expect(mockPrint).toHaveBeenCalledTimes(1);
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        body: JSON.stringify({ html: "<p>test</p>", filename: "my-nda.pdf" }),
+      })
+    );
   });
 
-  it("blocked popup: shows alert with 'pop-up' message", () => {
-    vi.spyOn(window, "open").mockReturnValue(null as unknown as Window);
-    const mockAlert = vi.spyOn(window, "alert").mockImplementation(() => {});
+  it("throws on backend error", async () => {
+    global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 500 });
 
-    printDocument("<p>test</p>");
-
-    expect(mockAlert).toHaveBeenCalledWith(expect.stringContaining("pop-up"));
-  });
-
-  it("no double-print guard: print called exactly twice when both onload and timer fire", () => {
-    const mockPrint = vi.fn();
-    const mockFocus = vi.fn();
-    const mockWrite = vi.fn();
-    const mockClose = vi.fn();
-    const mockWindow = {
-      print: mockPrint,
-      focus: mockFocus,
-      closed: false,
-      onload: null as (() => void) | null,
-      document: { write: mockWrite, close: mockClose },
-    };
-    vi.spyOn(window, "open").mockReturnValue(mockWindow as unknown as Window);
-
-    printDocument("<p>test</p>");
-
-    // Invoke onload manually (first print call)
-    mockWindow.onload!();
-
-    // Advance timer to trigger fallback (second print call)
-    vi.advanceTimersByTime(500);
-
-    // Both paths run independently — documented behavior is exactly 2 calls
-    expect(mockPrint).toHaveBeenCalledTimes(2);
+    await expect(printDocument("<p>fail</p>")).rejects.toThrow("PDF generation failed");
   });
 });

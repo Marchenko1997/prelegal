@@ -42,7 +42,7 @@ export function SignatureModal({ formData, onClose }: SignatureModalProps) {
         fields: formData as unknown as Record<string, string | null>,
         html,
       }).catch(() => {});
-      printDocument(html);
+      await printDocument(html);
       onClose();
     } catch (err) {
       setGenerateError(err instanceof Error ? err.message : "Failed to generate PDF");

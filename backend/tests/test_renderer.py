@@ -124,15 +124,11 @@ def test_cover_with_modifications():
     assert "Add clause 5A" in html
 
 
-def test_cover_xss_passthrough():
-    """Backend does NOT HTML-escape user input — documents intentional behaviour.
-
-    The backend output goes directly to the browser's print renderer.
-    Escaping is the frontend's responsibility (templateRenderer.ts).
-    This test will fail (and should be fixed) if escaping is ever added here.
-    """
+def test_cover_xss_escaped():
+    """Backend HTML-escapes user input to prevent stored XSS."""
     html = render_cover_page(make_request(purpose="<script>alert(1)</script>"), MINIMAL_COVER)
-    assert "<script>" in html
+    assert "<script>" not in html
+    assert "&lt;script&gt;" in html
 
 
 # --- render_standard_terms ---

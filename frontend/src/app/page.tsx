@@ -28,12 +28,21 @@ function getRoute(item: CatalogItem): string {
 export default function HomePage() {
   const { user, loading: authLoading } = useAuth();
   const [catalog, setCatalog] = useState<CatalogItem[]>([]);
+  const [catalogError, setCatalogError] = useState(false);
+
+  function fetchCatalog() {
+    setCatalogError(false);
+    fetch(`${API_BASE}/api/catalog`)
+      .then((r) => {
+        if (!r.ok) throw new Error();
+        return r.json();
+      })
+      .then(setCatalog)
+      .catch(() => setCatalogError(true));
+  }
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/catalog`)
-      .then((r) => r.json())
-      .then(setCatalog)
-      .catch(() => {});
+    fetchCatalog();
   }, []);
 
   if (authLoading || !user) {
@@ -56,7 +65,17 @@ export default function HomePage() {
           Select a template to get started.
         </p>
 
-        {catalog.length === 0 ? (
+        {catalogError ? (
+          <div className="text-center py-12">
+            <p className="text-red-600 text-sm mb-3">Failed to load templates.</p>
+            <button
+              onClick={fetchCatalog}
+              className="bg-brand-blue text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90"
+            >
+              Retry
+            </button>
+          </div>
+        ) : catalog.length === 0 ? (
           <p className="text-brand-gray">Loading templates...</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
