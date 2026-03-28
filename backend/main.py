@@ -12,6 +12,7 @@ from routers.auth import router as auth_router
 from routers.catalog import router as catalog_router
 from routers.chat import router as chat_router
 from routers.doc_chat import router as doc_chat_router
+from routers.documents import router as documents_router
 from routers.generate import router as generate_router
 
 load_dotenv()
@@ -39,6 +40,7 @@ app.include_router(auth_router)
 app.include_router(catalog_router)
 app.include_router(chat_router)
 app.include_router(doc_chat_router)
+app.include_router(documents_router)
 app.include_router(generate_router)
 
 # Serve the static Next.js export when available (Docker production)

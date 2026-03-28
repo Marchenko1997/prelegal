@@ -1,26 +1,24 @@
-export function printDocument(html: string): void {
-  const printWindow = window.open("", "_blank", "width=900,height=700");
-  if (!printWindow) {
-    alert("Please allow pop-ups to download the PDF.");
-    return;
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8001";
+
+export async function printDocument(html: string, filename?: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/pdf`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ html, filename: filename ?? "document.pdf" }),
+  });
+
+  if (!res.ok) {
+    throw new Error("PDF generation failed");
   }
 
-  // Assign onload BEFORE document.write to avoid the race where the load
-  // event fires before the handler is attached.
-  printWindow.onload = () => {
-    printWindow.focus();
-    printWindow.print();
-  };
-
-  printWindow.document.write(html);
-  printWindow.document.close();
-
-  // Fallback: if onload already fired synchronously (common in Chrome),
-  // trigger print after a short delay.
-  setTimeout(() => {
-    if (printWindow && !printWindow.closed) {
-      printWindow.focus();
-      printWindow.print();
-    }
-  }, 500);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename ?? "document.pdf";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }

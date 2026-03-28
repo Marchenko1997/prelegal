@@ -5,6 +5,7 @@ import { SignaturePad } from "@/components/signature/SignaturePad";
 import { NdaFormData } from "@/types/nda";
 import { generateNda } from "@/lib/apiClient";
 import { printDocument } from "@/lib/printDocument";
+import { saveDocument } from "@/lib/documentsApi";
 
 interface SignatureModalProps {
   formData: NdaFormData;
@@ -35,7 +36,13 @@ export function SignatureModal({ formData, onClose }: SignatureModalProps) {
         party2: { ...formData.party2, signature: sig2, date: today },
       };
       const { html } = await generateNda(data);
-      printDocument(html);
+      saveDocument({
+        doc_type: "mutual-nda",
+        title: "Mutual Non-Disclosure Agreement",
+        fields: formData as unknown as Record<string, string | null>,
+        html,
+      }).catch(() => {});
+      await printDocument(html);
       onClose();
     } catch (err) {
       setGenerateError(err instanceof Error ? err.message : "Failed to generate PDF");

@@ -57,6 +57,7 @@ export async function sendChatMessage(
   const response = await fetch(`${API_BASE}/api/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify({ messages, current_fields: currentFields }),
   });
 

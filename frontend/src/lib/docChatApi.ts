@@ -19,6 +19,7 @@ export async function sendDocChatMessage(
   const response = await fetch(`${API_BASE}/api/doc-chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify({
       doc_type: docType,
       messages,
@@ -35,7 +36,9 @@ export async function sendDocChatMessage(
 }
 
 export async function fetchDocTemplate(slug: string): Promise<string> {
-  const response = await fetch(`${API_BASE}/api/doc-templates/${slug}`);
+  const response = await fetch(`${API_BASE}/api/doc-templates/${slug}`, {
+    credentials: "include",
+  });
   if (!response.ok) {
     throw new Error(`Failed to fetch template: ${slug}`);
   }
@@ -50,6 +53,7 @@ export async function generateDoc(
   const response = await fetch(`${API_BASE}/api/generate-doc`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify({ doc_type: docType, fields, title }),
   });
 

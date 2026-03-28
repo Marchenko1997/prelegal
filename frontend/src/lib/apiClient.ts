@@ -41,6 +41,7 @@ export async function generateNda(data: NdaFormData): Promise<NdaGenerateRespons
   const response = await fetch(`${API_BASE}/api/generate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify(toApiPayload(data)),
   });
 
@@ -53,7 +54,9 @@ export async function generateNda(data: NdaFormData): Promise<NdaGenerateRespons
 }
 
 export async function fetchTemplate(name: "coverpage" | "terms"): Promise<string> {
-  const response = await fetch(`${API_BASE}/api/templates/${name}`);
+  const response = await fetch(`${API_BASE}/api/templates/${name}`, {
+    credentials: "include",
+  });
   if (!response.ok) {
     throw new Error(`Failed to fetch template: ${name}`);
   }

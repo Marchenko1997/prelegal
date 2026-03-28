@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import ReactSignatureCanvas from "react-signature-canvas";
 
 interface SignaturePadProps {
@@ -12,6 +12,19 @@ interface SignaturePadProps {
 
 export function SignaturePad({ label, value, onChange, error }: SignaturePadProps) {
   const sigRef = useRef<ReactSignatureCanvas>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [canvasWidth, setCanvasWidth] = useState(400);
+
+  useEffect(() => {
+    function updateWidth() {
+      if (containerRef.current) {
+        setCanvasWidth(Math.min(containerRef.current.clientWidth - 4, 400));
+      }
+    }
+    updateWidth();
+    window.addEventListener("resize", updateWidth);
+    return () => window.removeEventListener("resize", updateWidth);
+  }, []);
 
   function handleEnd() {
     if (sigRef.current) {
@@ -32,15 +45,12 @@ export function SignaturePad({ label, value, onChange, error }: SignaturePadProp
       <label className="text-sm font-medium text-gray-700">
         {label} <span className="text-red-500">*</span>
       </label>
-      {/* Fixed-width container — matches the canvas pixel dimensions exactly to
-          prevent the CSS width / backing-buffer size mismatch that corrupts
-          the captured signature data URL. */}
-      <div className="border-2 border-dashed border-gray-300 rounded-md bg-gray-50 overflow-auto">
+      <div ref={containerRef} className="border-2 border-dashed border-gray-300 rounded-md bg-gray-50">
         <ReactSignatureCanvas
           ref={sigRef}
           penColor="black"
           canvasProps={{
-            width: 400,
+            width: canvasWidth,
             height: 150,
             style: { display: "block", touchAction: "none" },
           }}
@@ -56,7 +66,7 @@ export function SignaturePad({ label, value, onChange, error }: SignaturePadProp
           Clear
         </button>
         {value && (
-          <span className="text-xs text-green-600">✓ Signature captured</span>
+          <span className="text-xs text-green-600">Signature captured</span>
         )}
       </div>
       {error && <p className="text-xs text-red-500">{error}</p>}
